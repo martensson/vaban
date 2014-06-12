@@ -12,8 +12,31 @@ planned.
 ``` sh
 go get github.com/ant0ine/go-json-rest/rest
 go build vaban.go
-./vaban
 ```
+
+**Create config.json**
+
+``` json
+{
+    "group1": {
+        "Hosts": [
+            "a.example.com:6082",
+            "b.example.com:6082",
+            "c.example.com:6082"
+        ],
+        "Version": 3
+    },
+    "group2":{
+        "Hosts": [
+            "x.example.com:6082",
+            "y.example.com:6082",
+            "z.example.com:6082"
+        ],
+        "Version": 4
+    }
+}
+```
+
 
 ## API Examples using curl
 
