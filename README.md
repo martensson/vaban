@@ -2,6 +2,8 @@
 
 *A quick and easy way to control groups of Varnish cache servers using a RESTful JSON API.*
 
+[![Build Status](https://travis-ci.org/martensson/vaban.svg?branch=master)](https://travis-ci.org/martensson/vaban)
+
 This is still an early version but its fully working and more features are
 planned.
 
