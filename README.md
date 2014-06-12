@@ -37,9 +37,9 @@ go build vaban.go
 }
 ```
 
-** Make sure that the varnish admin interface is available**
+**Make sure that the varnish admin interface is available**
 
-** Start Vaban**
+**Start Vaban**
 
 ``` sh
 ./vaban
