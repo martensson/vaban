@@ -37,7 +37,7 @@ go build vaban.go
 }
 ```
 
-**Make sure that the varnish admin interface is available**
+**Make sure that the varnish admin interface is available, usually listening on 0.0.0.0:6082**
 
 **Start Vaban**
 
