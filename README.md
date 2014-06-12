@@ -56,29 +56,29 @@ go build vaban.go
 #### Get status of Vaban
 
 ``` sh
-curl -i http://127.0.0.1:3000/
+curl -i http://127.0.0.1:4000/
 ```
 
 #### Get all hosts in group
 
 ``` sh
-curl -i http://127.0.0.1:3000/v1/service/group1
+curl -i http://127.0.0.1:4000/v1/service/group1
 ```
 
 #### Send ping to hosts to see if port is open
 
 ``` sh
-curl -i http://127.0.0.1:3000/v1/service/group1/ping
+curl -i http://127.0.0.1:4000/v1/service/group1/ping
 ```
 
 #### Ban the root of your website.
 
 ``` sh
-curl -i http://127.0.0.1:3000/v1/service/group1/ban -d '{"Pattern":"/"}'
+curl -i http://127.0.0.1:4000/v1/service/group1/ban -d '{"Pattern":"/"}'
 ```
 
 #### Ban all css files
 
 ``` sh
-curl -i http://127.0.0.1:3000/v1/service/group1/ban -d '{"Pattern":".*css"}'
+curl -i http://127.0.0.1:4000/v1/service/group1/ban -d '{"Pattern":".*css"}'
 ```

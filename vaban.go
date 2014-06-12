@@ -138,6 +138,6 @@ func main() {
 		&rest.Route{"GET", "/v1/service/:service/ping", GetPing},
 		&rest.Route{"POST", "/v1/service/:service/ban", PostBan},
 	)
-	log.Println("Starting Vaban on :3000")
-	http.ListenAndServe(":3000", &handler)
+	log.Println("Starting Vaban on :4000")
+	http.ListenAndServe(":4000", &handler)
 }
