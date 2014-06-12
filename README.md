@@ -7,7 +7,7 @@ planned.
 
 ## Install Vaban:
 
-**Run Vaban**
+**Compile Vaban**
 
 ``` sh
 go get github.com/ant0ine/go-json-rest/rest
@@ -36,6 +36,15 @@ go build vaban.go
     }
 }
 ```
+
+** Make sure that the varnish admin interface is available**
+
+** Start Vaban**
+
+``` sh
+./vaban
+```
+
 
 
 ## API Examples using curl
