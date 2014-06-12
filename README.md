@@ -67,7 +67,7 @@ curl -i http://127.0.0.1:3000/v1/service/group1
 curl -i http://127.0.0.1:3000/v1/service/group1/ping
 ```
 
-#### Ban the only the root (/) of your website.
+#### Ban the root (/) of your website.
 
 ``` sh
 curl -i http://127.0.0.1:3000/v1/service/group1/ban -d '{"Pattern":"/"}'
