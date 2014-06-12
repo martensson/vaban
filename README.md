@@ -1,13 +1,13 @@
 # Vaban
 
-*A quick and easy way to control groups of Varnish cache servers using a RESTful JSON API.*
+*A quick and easy way to control groups of Varnish Cache hosts using a RESTful JSON API.*
 
 [![Build Status](https://travis-ci.org/martensson/vaban.svg?branch=master)](https://travis-ci.org/martensson/vaban)
 
-This is still an early version but its fully working and more features are
-planned.
+This is still an early version but its fully functional and more features are
+planned. Currently only supports Varnish 3.x and no authentication. 
 
-Soon to come is support for authentication and both varnish 3 and 4.
+Soon to come is support for authentication and both banning both varnish 3 and 4.
 
 ## Install Vaban:
 
