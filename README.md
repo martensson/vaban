@@ -5,6 +5,8 @@
 This is still an early version but its fully working and more features are
 planned.
 
+Soon to come is support for authentication and both varnish 3 and 4.
+
 ## Install Vaban:
 
 **Compile Vaban**
@@ -55,19 +57,19 @@ go build vaban.go
 curl -i http://127.0.0.1:3000/
 ```
 
-#### Getting the servers in a group
+#### Get all hosts in group
 
 ``` sh
 curl -i http://127.0.0.1:3000/v1/service/group1
 ```
 
-#### Sending ping to servers to see that the port is open
+#### Send ping to hosts to see if port is open
 
 ``` sh
 curl -i http://127.0.0.1:3000/v1/service/group1/ping
 ```
 
-#### Ban the root (/) of your website.
+#### Ban the root of your website.
 
 ``` sh
 curl -i http://127.0.0.1:3000/v1/service/group1/ban -d '{"Pattern":"/"}'
