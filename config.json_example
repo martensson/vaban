@@ -1,0 +1,18 @@
+{
+    "group1": { 
+        "Hosts": [ 
+            "a.example.com:6082", 
+            "b.example.com:6082",
+            "c.example.com:6082"
+        ],
+        "Version": 3
+    },
+    "group2":{ 
+        "Hosts": [ 
+            "x.example.com:6082", 
+            "y.example.com:6082",
+            "z.example.com:6082"
+        ],
+        "Version": 4
+    }
+}
