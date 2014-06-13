@@ -70,6 +70,9 @@ func Banner(host string, pattern string, version int, secret string) string {
 		md := hash.Sum(nil)
 		mdStr := hex.EncodeToString(md)
 		conn.Write([]byte("auth " + mdStr + "\n"))
+		auth_reply := make([]byte, 512)
+		conn.Read(auth_reply)
+		log.Println(host, "auth status", strings.Trim(string(auth_reply)[0:12], " "))
 	}
 	// sending the magic ban commmand to varnish.
 	if version >= 4 {
