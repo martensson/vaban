@@ -5,7 +5,7 @@
 [![Build Status](https://travis-ci.org/martensson/vaban.svg?branch=master)](https://travis-ci.org/martensson/vaban)
 
 This is still an early version but its fully functional and more features are
-planned. Now supports Varnish 3 and 4, and authentication. 
+planned. Now supports Varnish 3 and 4, with authentication. 
 
 ## Install Vaban:
 
