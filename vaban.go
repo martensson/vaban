@@ -2,11 +2,15 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
+	"regexp"
+	"strings"
 
 	"github.com/ant0ine/go-json-rest/rest"
 )
@@ -23,6 +27,7 @@ type PatternPost struct {
 type Service struct {
 	Hosts   []string `json:"Hosts"`
 	Version int      `json:"Version"`
+	Secret  string   `json:"Secret"`
 }
 type Services map[string]Service
 
@@ -47,7 +52,7 @@ func Pinger(host string) string {
 	return "tcp port open"
 }
 
-func Banner(host string, pattern string) string {
+func Banner(host string, pattern string, version int, secret string) string {
 	conn, err := net.Dial("tcp", host)
 	if err != nil {
 		log.Println(err)
@@ -56,16 +61,30 @@ func Banner(host string, pattern string) string {
 	// I want to allocate 512 bytes, enough to read the varnish help output.
 	reply := make([]byte, 512)
 	conn.Read(reply)
+	rp := regexp.MustCompile("[a-z]{32}") //find challenge string
+	challenge := rp.FindString(string(reply))
+	if challenge != "" {
+		// time to authenticate
+		hash := sha256.New()
+		hash.Write([]byte(challenge + "\n" + secret + "\n" + challenge + "\n"))
+		md := hash.Sum(nil)
+		mdStr := hex.EncodeToString(md)
+		conn.Write([]byte("auth " + mdStr + "\n"))
+	}
 	// sending the magic ban commmand to varnish.
-	conn.Write([]byte("ban.url " + pattern + "$\n"))
+	if version >= 4 {
+		conn.Write([]byte("ban req.url ~ " + pattern + "$\n"))
+	} else {
+		conn.Write([]byte("ban.url " + pattern + "$\n"))
+	}
 	// again, 64 bytes is enough for this.
 	byte_status := make([]byte, 64)
 	conn.Read(byte_status)
 	conn.Close()
-	// cast byte to string and only keep the status code, the rest we dont care.
-	status := string(byte_status)[0:5]
-	log.Println(host, "ban status", status)
-	return "ban status " + status
+	// cast byte to string and only keep the status code (always max 13 char), the rest we dont care.
+	status := string(byte_status)[0:12]
+	log.Println(host, "ban status", strings.Trim(status, " "))
+	return "ban status " + strings.Trim(status, " ")
 }
 
 func GetPing(w rest.ResponseWriter, r *rest.Request) {
@@ -102,7 +121,7 @@ func PostBan(w rest.ResponseWriter, r *rest.Request) {
 		messages := Messages{}
 		for _, server := range s.Hosts {
 			message := Message{}
-			message.Msg = Banner(server, patternpost.Pattern)
+			message.Msg = Banner(server, patternpost.Pattern, s.Version, s.Secret)
 			messages[server] = message
 		}
 		w.WriteJson(messages)
