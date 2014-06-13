@@ -132,8 +132,6 @@ func PostBan(w rest.ResponseWriter, r *rest.Request) {
 		rest.NotFound(w, r)
 		return
 	}
-	var message Message
-	message.Msg = "ban sent to service " + service
 }
 
 func main() {
