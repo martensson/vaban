@@ -5,7 +5,8 @@
             "b.example.com:6082",
             "c.example.com:6082"
         ],
-        "Version": 3
+        "Version": 3,
+        "Secret": "1111-2222-3333-aaaa-bbbb-cccc"
     },
     "group2":{ 
         "Hosts": [ 
@@ -13,6 +14,7 @@
             "y.example.com:6082",
             "z.example.com:6082"
         ],
-        "Version": 4
+        "Version": 4,
+        "Secret": "1111-2222-3333-aaaa-bbbb-cccc"
     }
 }

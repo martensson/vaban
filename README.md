@@ -5,9 +5,7 @@
 [![Build Status](https://travis-ci.org/martensson/vaban.svg?branch=master)](https://travis-ci.org/martensson/vaban)
 
 This is still an early version but its fully functional and more features are
-planned. Currently only supports Varnish 3.x and no authentication. 
-
-Soon to come is support for authentication and both banning both varnish 3 and 4.
+planned. Now supports Varnish 3 and 4, and authentication. 
 
 ## Install Vaban:
 
@@ -28,7 +26,8 @@ go build vaban.go
             "b.example.com:6082",
             "c.example.com:6082"
         ],
-        "Version": 3
+        "Version": 3,
+        "Secret": "1111-2222-3333-aaaa-bbbb-cccc"
     },
     "group2":{
         "Hosts": [
@@ -36,12 +35,13 @@ go build vaban.go
             "y.example.com:6082",
             "z.example.com:6082"
         ],
-        "Version": 4
+        "Version": 4,
+        "Secret": "1111-2222-3333-aaaa-bbbb-cccc"
     }
 }
 ```
 
-**Make sure that the varnish admin interface is available, usually listening on 0.0.0.0:6082**
+**Make sure that the varnish admin interface is available, listening on 0.0.0.0:6082**
 
 **Start Vaban**
 
@@ -65,7 +65,7 @@ curl -i http://127.0.0.1:4000/
 curl -i http://127.0.0.1:4000/v1/service/group1
 ```
 
-#### Send ping to hosts to see if port is open
+#### Scan hosts to see if tcp port is open
 
 ``` sh
 curl -i http://127.0.0.1:4000/v1/service/group1/ping
