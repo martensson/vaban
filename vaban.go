@@ -20,8 +20,9 @@ type Message struct {
 }
 type Messages map[string]Message
 
-type PatternPost struct {
+type BanPost struct {
 	Pattern string
+	Vcl     string
 }
 
 type Service struct {
@@ -52,7 +53,7 @@ func Pinger(host string) string {
 	return "tcp port open"
 }
 
-func Banner(host string, pattern string, version int, secret string) string {
+func Banner(host string, banpost BanPost, version int, secret string) string {
 	conn, err := net.Dial("tcp", host)
 	if err != nil {
 		log.Println(err)
@@ -75,10 +76,15 @@ func Banner(host string, pattern string, version int, secret string) string {
 		log.Println(host, "auth status", strings.Trim(string(auth_reply)[0:12], " "))
 	}
 	// sending the magic ban commmand to varnish.
-	if version >= 4 {
-		conn.Write([]byte("ban req.url ~ " + pattern + "$\n"))
+	//if version >= 4 {
+	//	conn.Write([]byte("ban req.url ~ " + pattern + "$\n"))
+	//} else {
+	//	conn.Write([]byte("ban.url " + pattern + "$\n"))
+	//}
+	if banpost.Pattern != "" {
+		conn.Write([]byte("ban req.url ~ " + banpost.Pattern + "$\n"))
 	} else {
-		conn.Write([]byte("ban.url " + pattern + "$\n"))
+		conn.Write([]byte("ban " + banpost.Vcl + "\n"))
 	}
 	// again, 64 bytes is enough for this.
 	byte_status := make([]byte, 64)
@@ -109,14 +115,17 @@ func GetPing(w rest.ResponseWriter, r *rest.Request) {
 
 func PostBan(w rest.ResponseWriter, r *rest.Request) {
 	service := r.PathParam("service")
-	patternpost := PatternPost{}
-	err := r.DecodeJsonPayload(&patternpost)
+	banpost := BanPost{}
+	err := r.DecodeJsonPayload(&banpost)
 	if err != nil {
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if patternpost.Pattern == "" {
-		rest.Error(w, "Pattern is required", 400)
+	if banpost.Pattern == "" && banpost.Vcl == "" {
+		rest.Error(w, "Pattern or VCL is required", 400)
+		return
+	} else if banpost.Pattern != "" && banpost.Vcl != "" {
+		rest.Error(w, "Pattern or VCL is required, not both.", 400)
 		return
 	}
 
@@ -124,7 +133,7 @@ func PostBan(w rest.ResponseWriter, r *rest.Request) {
 		messages := Messages{}
 		for _, server := range s.Hosts {
 			message := Message{}
-			message.Msg = Banner(server, patternpost.Pattern, s.Version, s.Secret)
+			message.Msg = Banner(server, banpost, s.Version, s.Secret)
 			messages[server] = message
 		}
 		w.WriteJson(messages)

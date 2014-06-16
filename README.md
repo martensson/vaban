@@ -26,7 +26,6 @@ go build vaban.go
             "b.example.com:6082",
             "c.example.com:6082"
         ],
-        "Version": 3,
         "Secret": "1111-2222-3333-aaaa-bbbb-cccc"
     },
     "group2":{
@@ -35,7 +34,6 @@ go build vaban.go
             "y.example.com:6082",
             "z.example.com:6082"
         ],
-        "Version": 4,
         "Secret": "1111-2222-3333-aaaa-bbbb-cccc"
     }
 }
@@ -81,4 +79,10 @@ curl -i http://127.0.0.1:4000/v1/service/group1/ban -d '{"Pattern":"/"}'
 
 ``` sh
 curl -i http://127.0.0.1:4000/v1/service/group1/ban -d '{"Pattern":".*css"}'
+```
+
+#### Ban based on VCL, in this case all objects matching a host-header.
+
+``` sh
+curl -i http://127.0.0.1:4000/v1/service/group1/ban -d '{"Vcl":"req.http.Host == 'example.com'"}'
 ```
