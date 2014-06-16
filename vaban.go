@@ -26,9 +26,8 @@ type BanPost struct {
 }
 
 type Service struct {
-	Hosts   []string `json:"Hosts"`
-	Version int      `json:"Version"`
-	Secret  string   `json:"Secret"`
+	Hosts  []string `json:"Hosts"`
+	Secret string   `json:"Secret"`
 }
 type Services map[string]Service
 
@@ -53,7 +52,7 @@ func Pinger(host string) string {
 	return "tcp port open"
 }
 
-func Banner(host string, banpost BanPost, version int, secret string) string {
+func Banner(host string, banpost BanPost, secret string) string {
 	conn, err := net.Dial("tcp", host)
 	if err != nil {
 		log.Println(err)
@@ -76,11 +75,6 @@ func Banner(host string, banpost BanPost, version int, secret string) string {
 		log.Println(host, "auth status", strings.Trim(string(auth_reply)[0:12], " "))
 	}
 	// sending the magic ban commmand to varnish.
-	//if version >= 4 {
-	//	conn.Write([]byte("ban req.url ~ " + pattern + "$\n"))
-	//} else {
-	//	conn.Write([]byte("ban.url " + pattern + "$\n"))
-	//}
 	if banpost.Pattern != "" {
 		conn.Write([]byte("ban req.url ~ " + banpost.Pattern + "$\n"))
 	} else {
@@ -133,7 +127,7 @@ func PostBan(w rest.ResponseWriter, r *rest.Request) {
 		messages := Messages{}
 		for _, server := range s.Hosts {
 			message := Message{}
-			message.Msg = Banner(server, banpost, s.Version, s.Secret)
+			message.Msg = Banner(server, banpost, s.Secret)
 			messages[server] = message
 		}
 		w.WriteJson(messages)
