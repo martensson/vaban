@@ -49,7 +49,7 @@ go build vaban.go
 
 
 
-## API Examples using curl
+## API Reference using curl
 
 #### Get status of Vaban
 
