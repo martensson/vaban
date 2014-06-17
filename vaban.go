@@ -44,6 +44,15 @@ func GetService(w rest.ResponseWriter, r *rest.Request) {
 	}
 }
 
+func GetServices(w rest.ResponseWriter, r *rest.Request) {
+	var keys []string
+
+	for k, _ := range services {
+		keys = append(keys, k)
+	}
+	w.WriteJson(keys)
+}
+
 func Pinger(host string) string {
 	_, err := net.Dial("tcp", host)
 	if err != nil {
@@ -158,6 +167,7 @@ func main() {
 			},
 		},
 		&rest.Route{"GET", "/v1/service/:service", GetService},
+		&rest.Route{"GET", "/v1/services", GetServices},
 		&rest.Route{"GET", "/v1/service/:service/ping", GetPing},
 		&rest.Route{"POST", "/v1/service/:service/ban", PostBan},
 	)

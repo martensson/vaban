@@ -57,6 +57,12 @@ go build vaban.go
 curl -i http://127.0.0.1:4000/
 ```
 
+#### Get all groups
+
+``` sh
+curl -i http://127.0.0.1:4000/v1/services
+```
+
 #### Get all hosts in group
 
 ``` sh
