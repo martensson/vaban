@@ -54,6 +54,7 @@ service2:
 **Make sure that the varnish admin interface is available, listening on 0.0.0.0:6082**
 
 
+
 ### REST API Reference
 
 #### get status
@@ -87,6 +88,8 @@ service2:
     POST /v1/service/:service/ban
     JSON Body: {"Vcl":"..."}
     Expected HTTP status code: 200
+
+
 
 ### CURL Examples
 
