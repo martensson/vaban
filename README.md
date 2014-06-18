@@ -61,23 +61,29 @@ go build vaban.go
 
 # REST API Reference
 
-**get status**
+#### get status
+
     GET /
 
-**get all services**
+#### get all services
+    
     GET /v1/services
 
-**get all hosts in service**
+#### get all hosts in service
+
     GET /v1/service/:service
 
-**tcp scan all hosts**
+#### tcp scan all hosts
+
     GET /v1/service/:service/ping
 
-**ban based on pattern**
+#### ban based on pattern
+
     POST /v1/service/:service/ban
     JSON Body: {"Pattern":"..."}
 
-**ban based on vcl**
+#### ban based on vcl
+
     POST /v1/service/:service/ban
     JSON Body: {"Vcl":"..."}
 
