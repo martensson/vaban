@@ -5,12 +5,14 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"flag"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
 	"regexp"
 	"strings"
+	"sync"
 
 	"github.com/ant0ine/go-json-rest/rest"
 )
@@ -53,19 +55,19 @@ func GetServices(w rest.ResponseWriter, r *rest.Request) {
 	w.WriteJson(keys)
 }
 
-func Pinger(host string) string {
-	_, err := net.Dial("tcp", host)
+func Pinger(server string) string {
+	_, err := net.Dial("tcp", server)
 	if err != nil {
-		return "tcp port closed"
+		return err.Error()
 	}
 	return "tcp port open"
 }
 
-func Banner(host string, banpost BanPost, secret string) string {
-	conn, err := net.Dial("tcp", host)
+func Banner(server string, banpost BanPost, secret string) string {
+	conn, err := net.Dial("tcp", server)
 	if err != nil {
 		log.Println(err)
-		return "tcp port closed"
+		return err.Error()
 	}
 	// I want to allocate 512 bytes, enough to read the varnish help output.
 	reply := make([]byte, 512)
@@ -81,7 +83,7 @@ func Banner(host string, banpost BanPost, secret string) string {
 		conn.Write([]byte("auth " + mdStr + "\n"))
 		auth_reply := make([]byte, 512)
 		conn.Read(auth_reply)
-		log.Println(host, "auth status", strings.Trim(string(auth_reply)[0:12], " "))
+		log.Println(server, "auth status", strings.Trim(string(auth_reply)[0:12], " "))
 	}
 	// sending the magic ban commmand to varnish.
 	if banpost.Pattern != "" {
@@ -95,7 +97,7 @@ func Banner(host string, banpost BanPost, secret string) string {
 	conn.Close()
 	// cast byte to string and only keep the status code (always max 13 char), the rest we dont care.
 	status := string(byte_status)[0:12]
-	log.Println(host, "ban status", strings.Trim(status, " "))
+	log.Println(server, "ban status", strings.Trim(status, " "))
 	return "ban status " + strings.Trim(status, " ")
 }
 
@@ -103,12 +105,22 @@ func GetPing(w rest.ResponseWriter, r *rest.Request) {
 	service := r.PathParam("service")
 
 	if s, ok := services[service]; ok {
+		// We need the WaitGroup for some awesome Go concurrency of our BANs
+		var wg sync.WaitGroup
 		messages := Messages{}
 		for _, server := range s.Hosts {
-			message := Message{}
-			message.Msg = Pinger(server)
-			messages[server] = message
+			// Increment the WaitGroup counter.
+			wg.Add(1)
+			go func(server string) {
+				// Decrement the counter when the goroutine completes.
+				defer wg.Done()
+				message := Message{}
+				message.Msg = Pinger(server)
+				messages[server] = message
+			}(server)
 		}
+		// Wait for all PINGs to complete.
+		wg.Wait()
 		w.WriteJson(messages)
 	} else {
 		rest.NotFound(w, r)
@@ -133,12 +145,23 @@ func PostBan(w rest.ResponseWriter, r *rest.Request) {
 	}
 
 	if s, ok := services[service]; ok {
+		// We need the WaitGroup for some awesome Go concurrency of our BANs
+		var wg sync.WaitGroup
 		messages := Messages{}
 		for _, server := range s.Hosts {
-			message := Message{}
-			message.Msg = Banner(server, banpost, s.Secret)
-			messages[server] = message
+			// Increment the WaitGroup counter.
+			wg.Add(1)
+			go func(server string) {
+				// Decrement the counter when the goroutine completes.
+				defer wg.Done()
+				log.Println(server)
+				message := Message{}
+				message.Msg = Banner(server, banpost, s.Secret)
+				messages[server] = message
+			}(server)
 		}
+		// Wait for all BANs to complete.
+		wg.Wait()
 		w.WriteJson(messages)
 	} else {
 		rest.NotFound(w, r)
@@ -147,7 +170,10 @@ func PostBan(w rest.ResponseWriter, r *rest.Request) {
 }
 
 func main() {
-	file, err := ioutil.ReadFile("config.json")
+	port := flag.String("p", "4000", "Listen on this port. (default 4000)")
+	config := flag.String("f", "config.json", "Path to config. (default config.json)")
+	flag.Parse()
+	file, err := ioutil.ReadFile(*config)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -171,6 +197,6 @@ func main() {
 		&rest.Route{"GET", "/v1/service/:service/ping", GetPing},
 		&rest.Route{"POST", "/v1/service/:service/ban", PostBan},
 	)
-	log.Println("Starting Vaban on :4000")
-	http.ListenAndServe(":4000", &handler)
+	log.Println("Starting Vaban on :" + *port)
+	http.ListenAndServe(":"+*port, &handler)
 }

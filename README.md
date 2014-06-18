@@ -4,19 +4,30 @@
 
 [![Build Status](https://travis-ci.org/martensson/vaban.svg?branch=master)](https://travis-ci.org/martensson/vaban)
 
-This is still an early version but its fully functional and more features are
-planned. Now supports Varnish 3 and 4, with authentication. 
+Vaban is built in Go for super high performance and concurrency. Every request and every ban spawns its own lightweight thread.
+It supports Varnish 3 + 4, Authentication, Pattern-based and VCL-based banning.
 
-## Install Vaban:
+# Getting Started
 
-**Compile Vaban**
+### Installing from source
+
+#### Dependencies
+
+* Git
+* Go 1.1+
+
+#### Clone and Build locally:
 
 ``` sh
+git clone https://github.com/martensson/vaban.git
+cd vaban
 go get github.com/ant0ine/go-json-rest/rest
 go build vaban.go
 ```
 
-**Create config.json**
+
+
+#### Create a config.json file:
 
 ``` json
 {
@@ -39,17 +50,16 @@ go build vaban.go
 }
 ```
 
-**Make sure that the varnish admin interface is available, listening on 0.0.0.0:6082**
-
-**Start Vaban**
-
+#### Running Vaban
 ``` sh
-./vaban
+./vaban -p 4000 -f /path/to/config.json
 ```
 
 
+**Make sure that the varnish admin interface is available, listening on 0.0.0.0:6082**
 
-## API Reference using curl
+
+# API Reference using curl
 
 #### Get status of Vaban
 
