@@ -7,7 +7,7 @@
 Vaban is built in Go for super high performance and concurrency. Every request and every ban spawns its own lightweight thread.
 It supports Varnish 3 + 4, Authentication, Pattern-based and VCL-based banning.
 
-# Getting Started
+## Getting Started
 
 ### Installing from source
 
@@ -24,9 +24,7 @@ cd vaban
 go build vaban.go
 ```
 
-
-
-#### Create a config.yml file:
+#### Create a config.yml file and add all your services:
 
 ``` yaml
 ---
@@ -56,7 +54,7 @@ service2:
 **Make sure that the varnish admin interface is available, listening on 0.0.0.0:6082**
 
 
-# REST API Reference
+### REST API Reference
 
 #### get status
 
@@ -90,7 +88,7 @@ service2:
     JSON Body: {"Vcl":"..."}
     Expected HTTP status code: 200
 
-# CURL Examples
+### CURL Examples
 
 #### Get status of Vaban
 
