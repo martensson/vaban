@@ -64,28 +64,34 @@ go build vaban.go
 #### get status
 
     GET /
+    Expected HTTP status code: 200
 
 #### get all services
     
     GET /v1/services
+    Expected HTTP status code: 200
 
 #### get all hosts in service
 
     GET /v1/service/:service
+    Expected HTTP status code: 200
 
 #### tcp scan all hosts
 
     GET /v1/service/:service/ping
+    Expected HTTP status code: 200
 
 #### ban based on pattern
 
     POST /v1/service/:service/ban
     JSON Body: {"Pattern":"..."}
+    Expected HTTP status code: 200
 
 #### ban based on vcl
 
     POST /v1/service/:service/ban
     JSON Body: {"Vcl":"..."}
+    Expected HTTP status code: 200
 
 # CURL Examples
 
