@@ -59,7 +59,29 @@ go build vaban.go
 **Make sure that the varnish admin interface is available, listening on 0.0.0.0:6082**
 
 
-# API Reference using curl
+# REST API Reference
+
+**get status**
+    GET /
+
+**get all services**
+    GET /v1/services
+
+**get all hosts in service**
+    GET /v1/service/:service
+
+**tcp scan all hosts**
+    GET /v1/service/:service/ping
+
+**ban based on pattern**
+    POST /v1/service/:service/ban
+    JSON Body: {"Pattern":"..."}
+
+**ban based on vcl**
+    POST /v1/service/:service/ban
+    JSON Body: {"Vcl":"..."}
+
+# CURL Examples
 
 #### Get status of Vaban
 
