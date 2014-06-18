@@ -1,0 +1,17 @@
+---
+service1: 
+  hosts: 
+    - "a.example.com:6082"
+    - "b.example.com:6082"
+    - "c.example.com:6082"
+    - "d.example.com:6082"
+    - "e.example.com:6082"
+  secret: "1111-2222-3333-aaaa-bbbb-cccc"
+
+service2: 
+  hosts: 
+    - "x.example.com:6082"
+    - "y.example.com:6082"
+    - "z.example.com:6082"
+  secret: "1111-2222-3333-aaaa-bbbb-cccc"
+

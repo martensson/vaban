@@ -4,7 +4,6 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"flag"
 	"io/ioutil"
 	"log"
@@ -15,6 +14,7 @@ import (
 	"sync"
 
 	"github.com/ant0ine/go-json-rest/rest"
+	"gopkg.in/yaml.v1"
 )
 
 type Message struct {
@@ -28,8 +28,8 @@ type BanPost struct {
 }
 
 type Service struct {
-	Hosts  []string `json:"Hosts"`
-	Secret string   `json:"Secret"`
+	Hosts  []string
+	Secret string
 }
 type Services map[string]Service
 
@@ -171,13 +171,13 @@ func PostBan(w rest.ResponseWriter, r *rest.Request) {
 
 func main() {
 	port := flag.String("p", "4000", "Listen on this port. (default 4000)")
-	config := flag.String("f", "config.json", "Path to config. (default config.json)")
+	config := flag.String("f", "config.yml", "Path to config. (default config.yml)")
 	flag.Parse()
 	file, err := ioutil.ReadFile(*config)
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = json.Unmarshal(file, &services)
+	err = yaml.Unmarshal(file, &services)
 	if err != nil {
 		log.Fatal("Problem parsing config: ", err)
 	}

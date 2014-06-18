@@ -21,38 +21,35 @@ It supports Varnish 3 + 4, Authentication, Pattern-based and VCL-based banning.
 ``` sh
 git clone https://github.com/martensson/vaban.git
 cd vaban
-go get github.com/ant0ine/go-json-rest/rest
 go build vaban.go
 ```
 
 
 
-#### Create a config.json file:
+#### Create a config.yml file:
 
-``` json
-{
-    "group1": {
-        "Hosts": [
-            "a.example.com:6082",
-            "b.example.com:6082",
-            "c.example.com:6082"
-        ],
-        "Secret": "1111-2222-3333-aaaa-bbbb-cccc"
-    },
-    "group2":{
-        "Hosts": [
-            "x.example.com:6082",
-            "y.example.com:6082",
-            "z.example.com:6082"
-        ],
-        "Secret": "1111-2222-3333-aaaa-bbbb-cccc"
-    }
-}
+``` yaml
+---
+service1:
+  hosts:
+    - "a.example.com:6082"
+    - "b.example.com:6082"
+    - "c.example.com:6082"
+    - "d.example.com:6082"
+    - "e.example.com:6082"
+  secret: "1111-2222-3333-aaaa-bbbb-cccc"
+
+service2:
+  hosts:
+    - "x.example.com:6082"
+    - "y.example.com:6082"
+    - "z.example.com:6082"
+  secret: "1111-2222-3333-aaaa-bbbb-cccc"
 ```
 
 #### Running Vaban
 ``` sh
-./vaban -p 4000 -f /path/to/config.json
+./vaban -p 4000 -f /path/to/config.yml
 ```
 
 
