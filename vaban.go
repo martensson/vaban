@@ -2,16 +2,11 @@
 package main
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"flag"
 	"io/ioutil"
 	"log"
-	"net"
 	"net/http"
-	"regexp"
-	"strings"
-	"sync"
+	"os"
 
 	"github.com/ant0ine/go-json-rest/rest"
 	"gopkg.in/yaml.v1"
@@ -22,11 +17,6 @@ type Message struct {
 }
 type Messages map[string]Message
 
-type BanPost struct {
-	Pattern string
-	Vcl     string
-}
-
 type Service struct {
 	Hosts  []string
 	Secret string
@@ -35,141 +25,12 @@ type Services map[string]Service
 
 var services Services
 
-func GetService(w rest.ResponseWriter, r *rest.Request) {
-	service := r.PathParam("service")
-
-	if s, ok := services[service]; ok {
-		w.WriteJson(s.Hosts)
-	} else {
-		rest.NotFound(w, r)
-		return
-	}
-}
-
-func GetServices(w rest.ResponseWriter, r *rest.Request) {
-	var keys []string
-
-	for k, _ := range services {
-		keys = append(keys, k)
-	}
-	w.WriteJson(keys)
-}
-
-func Pinger(server string) string {
-	_, err := net.Dial("tcp", server)
-	if err != nil {
-		return err.Error()
-	}
-	return "tcp port open"
-}
-
-func Banner(server string, banpost BanPost, secret string) string {
-	conn, err := net.Dial("tcp", server)
-	if err != nil {
-		log.Println(err)
-		return err.Error()
-	}
-	// I want to allocate 512 bytes, enough to read the varnish help output.
-	reply := make([]byte, 512)
-	conn.Read(reply)
-	rp := regexp.MustCompile("[a-z]{32}") //find challenge string
-	challenge := rp.FindString(string(reply))
-	if challenge != "" {
-		// time to authenticate
-		hash := sha256.New()
-		hash.Write([]byte(challenge + "\n" + secret + "\n" + challenge + "\n"))
-		md := hash.Sum(nil)
-		mdStr := hex.EncodeToString(md)
-		conn.Write([]byte("auth " + mdStr + "\n"))
-		auth_reply := make([]byte, 512)
-		conn.Read(auth_reply)
-		log.Println(server, "auth status", strings.Trim(string(auth_reply)[0:12], " "))
-	}
-	// sending the magic ban commmand to varnish.
-	if banpost.Pattern != "" {
-		conn.Write([]byte("ban req.url ~ " + banpost.Pattern + "$\n"))
-	} else {
-		conn.Write([]byte("ban " + banpost.Vcl + "\n"))
-	}
-	// again, 64 bytes is enough for this.
-	byte_status := make([]byte, 64)
-	conn.Read(byte_status)
-	conn.Close()
-	// cast byte to string and only keep the status code (always max 13 char), the rest we dont care.
-	status := string(byte_status)[0:12]
-	log.Println(server, "ban status", strings.Trim(status, " "))
-	return "ban status " + strings.Trim(status, " ")
-}
-
-func GetPing(w rest.ResponseWriter, r *rest.Request) {
-	service := r.PathParam("service")
-
-	if s, ok := services[service]; ok {
-		// We need the WaitGroup for some awesome Go concurrency of our BANs
-		var wg sync.WaitGroup
-		messages := Messages{}
-		for _, server := range s.Hosts {
-			// Increment the WaitGroup counter.
-			wg.Add(1)
-			go func(server string) {
-				// Decrement the counter when the goroutine completes.
-				defer wg.Done()
-				message := Message{}
-				message.Msg = Pinger(server)
-				messages[server] = message
-			}(server)
-		}
-		// Wait for all PINGs to complete.
-		wg.Wait()
-		w.WriteJson(messages)
-	} else {
-		rest.NotFound(w, r)
-		return
-	}
-}
-
-func PostBan(w rest.ResponseWriter, r *rest.Request) {
-	service := r.PathParam("service")
-	banpost := BanPost{}
-	err := r.DecodeJsonPayload(&banpost)
-	if err != nil {
-		rest.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	if banpost.Pattern == "" && banpost.Vcl == "" {
-		rest.Error(w, "Pattern or VCL is required", 400)
-		return
-	} else if banpost.Pattern != "" && banpost.Vcl != "" {
-		rest.Error(w, "Pattern or VCL is required, not both.", 400)
-		return
-	}
-
-	if s, ok := services[service]; ok {
-		// We need the WaitGroup for some awesome Go concurrency of our BANs
-		var wg sync.WaitGroup
-		messages := Messages{}
-		for _, server := range s.Hosts {
-			// Increment the WaitGroup counter.
-			wg.Add(1)
-			go func(server string) {
-				// Decrement the counter when the goroutine completes.
-				defer wg.Done()
-				log.Println(server)
-				message := Message{}
-				message.Msg = Banner(server, banpost, s.Secret)
-				messages[server] = message
-			}(server)
-		}
-		// Wait for all BANs to complete.
-		wg.Wait()
-		w.WriteJson(messages)
-	} else {
-		rest.NotFound(w, r)
-		return
-	}
-}
-
 func main() {
+	accessfile, err := os.OpenFile("/tmp/vaban_access_log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+	accesslogger := log.New(accessfile, "", 0)
 	port := flag.String("p", "4000", "Listen on this port. (default 4000)")
 	config := flag.String("f", "config.yml", "Path to config. (default config.yml)")
 	flag.Parse()
@@ -185,6 +46,8 @@ func main() {
 		EnableRelaxedContentType: true,
 		EnableStatusService:      true,
 		XPoweredBy:               "Vaban",
+		EnableLogAsJson:          true,
+		Logger:                   accesslogger,
 	}
 	handler.SetRoutes(
 		&rest.Route{"GET", "/",

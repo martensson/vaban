@@ -4,8 +4,11 @@
 
 [![Build Status](https://travis-ci.org/martensson/vaban.svg?branch=master)](https://travis-ci.org/martensson/vaban)
 
-Vaban is built in Go for super high performance and concurrency. Every request and every ban spawns its own lightweight thread.
+Vaban is built in Go for high performance, concurrency and simplicity. Every request and every ban spawns its own lightweight thread.
 It supports Varnish 3 + 4, Authentication, Pattern-based and VCL-based banning.
+
+TODO: Adding support for health probing of backends and manual enable/disable
+of backends.
 
 ## Getting Started
 
@@ -21,7 +24,7 @@ It supports Varnish 3 + 4, Authentication, Pattern-based and VCL-based banning.
 ``` sh
 git clone https://github.com/martensson/vaban.git
 cd vaban
-go build vaban.go
+go build
 ```
 
 #### Create a config.yml file and add all your services:
