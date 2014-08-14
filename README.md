@@ -5,10 +5,9 @@
 [![Build Status](https://travis-ci.org/martensson/vaban.svg?branch=master)](https://travis-ci.org/martensson/vaban)
 
 Vaban is built in Go for high performance, concurrency and simplicity. Every request and every ban spawns its own lightweight thread.
-It supports Varnish 3 + 4, Authentication, Pattern-based and VCL-based banning.
+It supports Varnish 3.0.3 + 4, Authentication, Pattern-based and VCL-based banning.
 
-TODO: Adding support for health probing of backends and manual enable/disable
-of backends.
+TODO: Adding support to manually enable/disable backends.
 
 ## Getting Started
 
@@ -75,9 +74,14 @@ service2:
     GET /v1/service/:service
     Expected HTTP status code: 200
 
-#### tcp scan all hosts
+#### tcp port scan all hosts
 
     GET /v1/service/:service/ping
+    Expected HTTP status code: 200
+
+#### check health status of all backends
+
+    GET /v1/service/:service/health
     Expected HTTP status code: 200
 
 #### ban based on pattern
@@ -118,6 +122,12 @@ curl -i http://127.0.0.1:4000/v1/service/group1
 
 ``` sh
 curl -i http://127.0.0.1:4000/v1/service/group1/ping
+```
+
+#### Check health status of all backends
+
+``` sh
+curl -i http://127.0.0.1:4000/v1/service/group1/health
 ```
 
 #### Ban the root of your website.

@@ -88,10 +88,15 @@ func Banner(server string, banpost BanPost, secret string) string {
 	}
 	// again, 64 bytes is enough for this.
 	byte_status := make([]byte, 64)
-	conn.Read(byte_status)
+	_, err = conn.Read(byte_status)
+	if err != nil {
+		log.Printf("Could not read packet : %s", err.Error())
+		return err.Error()
+	}
 	conn.Close()
 	// cast byte to string and only keep the status code (always max 13 char), the rest we dont care.
 	status := string(byte_status)[0:12]
-	log.Println(server, "banned with status", strings.Trim(status, " "))
-	return "ban status " + strings.Trim(status, " ")
+	status = strings.Trim(status, " ")
+	log.Println(server, "banned with status", status)
+	return "ban status " + status
 }

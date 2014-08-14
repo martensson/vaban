@@ -58,6 +58,7 @@ func main() {
 		&rest.Route{"GET", "/v1/service/:service", GetService},
 		&rest.Route{"GET", "/v1/services", GetServices},
 		&rest.Route{"GET", "/v1/service/:service/ping", GetPing},
+		&rest.Route{"GET", "/v1/service/:service/health", GetHealth},
 		&rest.Route{"POST", "/v1/service/:service/ban", PostBan},
 	)
 	log.Println("Starting Vaban on :" + *port)
