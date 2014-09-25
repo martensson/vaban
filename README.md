@@ -11,6 +11,13 @@ TODO: Adding support to manually enable/disable backends.
 
 ## Getting Started
 
+## Installing from packages
+
+The easiest way to install Vaban is from packages.
+
+- Currently enabled for Ubuntu 14.04/12.04 and Debian 7.
+- Current packages available from [packager.io](https://packager.io/gh/martensson/vaban/)
+
 ### Installing from source
 
 #### Dependencies
@@ -27,6 +34,8 @@ go build
 ```
 
 #### Create a config.yml file and add all your services:
+
+Put the file inside your application root, default: /opt/vaban/config.yml
 
 ``` yaml
 ---
@@ -48,8 +57,20 @@ service2:
 ```
 
 #### Running Vaban
+
+If compiling from source:
 ``` sh
 ./vaban -p 4000 -f /path/to/config.yml
+```
+If you installed from packages:
+``` sh
+vaban run web
+```
+or
+``` sh
+vaban scale web=1
+service vaban start
+vaban logs
 ```
 
 
