@@ -74,7 +74,7 @@ vaban logs
 ```
 
 
-**Make sure that the varnish admin interface is available, listening on 0.0.0.0:6082**
+**Make sure that the varnish admin interface is available on your hosts, listening on 0.0.0.0:6082**
 
 
 
