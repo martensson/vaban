@@ -11,7 +11,7 @@ TODO: Adding support to manually enable/disable backends.
 
 ## Getting Started
 
-## Installing from packages
+### Installing from packages
 
 The easiest way to install Vaban is from packages.
 
