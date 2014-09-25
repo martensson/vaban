@@ -1,0 +1,4 @@
+targets:
+  ubuntu-12.04: true
+  ubuntu-14.04: true
+  debian-7: true
