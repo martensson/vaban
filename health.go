@@ -5,11 +5,12 @@ import (
 	"encoding/hex"
 	"log"
 	"net"
+	"net/http"
 	"regexp"
 	"strings"
 	"sync"
 
-	"github.com/ant0ine/go-json-rest/rest"
+	"github.com/emicklei/go-restful"
 )
 
 type HealthStatus struct {
@@ -20,8 +21,8 @@ type HealthStatus struct {
 type Backends map[string]HealthStatus
 type Servers map[string]Backends
 
-func GetHealth(w rest.ResponseWriter, r *rest.Request) {
-	service := r.PathParam("service")
+func GetHealth(req *restful.Request, resp *restful.Response) {
+	service := req.PathParameter("service")
 	if s, ok := services[service]; ok {
 		// We need the WaitGroup for some awesome Go concurrency
 		var wg sync.WaitGroup
@@ -39,9 +40,9 @@ func GetHealth(w rest.ResponseWriter, r *rest.Request) {
 		}
 		// Wait for all BANs to complete.
 		wg.Wait()
-		w.WriteJson(servers)
+		resp.WriteEntity(servers)
 	} else {
-		rest.NotFound(w, r)
+		resp.WriteErrorString(http.StatusNotFound, "Service could not be found.")
 		return
 	}
 }

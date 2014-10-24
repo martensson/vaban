@@ -10,7 +10,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ant0ine/go-json-rest/rest"
+	"github.com/emicklei/go-restful"
 )
 
 type BanPost struct {
@@ -18,19 +18,21 @@ type BanPost struct {
 	Vcl     string
 }
 
-func PostBan(w rest.ResponseWriter, r *rest.Request) {
-	service := r.PathParam("service")
+func PostBan(req *restful.Request, resp *restful.Response) {
+	service := req.PathParameter("service")
 	banpost := BanPost{}
-	err := r.DecodeJsonPayload(&banpost)
+
+	err := req.ReadEntity(&banpost)
 	if err != nil {
-		rest.Error(w, err.Error(), http.StatusInternalServerError)
+		resp.AddHeader("Content-Type", "text/plain")
+		resp.WriteErrorString(http.StatusInternalServerError, err.Error())
 		return
 	}
 	if banpost.Pattern == "" && banpost.Vcl == "" {
-		rest.Error(w, "Pattern or VCL is required", 400)
+		resp.WriteErrorString(http.StatusBadRequest, "Pattern or VCL is required")
 		return
 	} else if banpost.Pattern != "" && banpost.Vcl != "" {
-		rest.Error(w, "Pattern or VCL is required, not both.", 400)
+		resp.WriteErrorString(http.StatusBadRequest, "Pattern or VCL is required, not both.")
 		return
 	}
 
@@ -51,9 +53,9 @@ func PostBan(w rest.ResponseWriter, r *rest.Request) {
 		}
 		// Wait for all BANs to complete.
 		wg.Wait()
-		w.WriteJson(messages)
+		resp.WriteEntity(messages)
 	} else {
-		rest.NotFound(w, r)
+		resp.WriteErrorString(http.StatusNotFound, "Service could not be found.")
 		return
 	}
 }

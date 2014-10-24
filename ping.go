@@ -2,9 +2,10 @@ package main
 
 import (
 	"net"
+	"net/http"
 	"sync"
 
-	"github.com/ant0ine/go-json-rest/rest"
+	"github.com/emicklei/go-restful"
 )
 
 func Pinger(server string) string {
@@ -15,8 +16,8 @@ func Pinger(server string) string {
 	return "tcp port open"
 }
 
-func GetPing(w rest.ResponseWriter, r *rest.Request) {
-	service := r.PathParam("service")
+func GetPing(req *restful.Request, resp *restful.Response) {
+	service := req.PathParameter("service")
 
 	if s, ok := services[service]; ok {
 		// We need the WaitGroup for some awesome Go concurrency of our BANs
@@ -35,9 +36,9 @@ func GetPing(w rest.ResponseWriter, r *rest.Request) {
 		}
 		// Wait for all PINGs to complete.
 		wg.Wait()
-		w.WriteJson(messages)
+		resp.WriteEntity(messages)
 	} else {
-		rest.NotFound(w, r)
+		resp.WriteErrorString(http.StatusNotFound, "Service could not be found.")
 		return
 	}
 }
