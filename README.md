@@ -83,12 +83,6 @@ Visit http://127.0.0.1:4000/
 
 ### CURL Examples
 
-#### Get status of Vaban
-
-``` sh
-curl -i http://127.0.0.1:4000/
-```
-
 #### Get all groups
 
 ``` sh
