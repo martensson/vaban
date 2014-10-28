@@ -23,7 +23,7 @@ The easiest way to install Vaban is from packages.
 #### Dependencies
 
 * Git
-* Go 1.1+
+* Go 1.3+
 
 #### Clone and Build locally:
 
@@ -77,47 +77,9 @@ vaban logs
 **Make sure that the varnish admin interface is available on your hosts, listening on 0.0.0.0:6082**
 
 
+### SWAGGER REST API Reference
 
-### REST API Reference
-
-#### get status
-
-    GET /
-    Expected HTTP status code: 200
-
-#### get all services
-    
-    GET /v1/services
-    Expected HTTP status code: 200
-
-#### get all hosts in service
-
-    GET /v1/service/:service
-    Expected HTTP status code: 200
-
-#### tcp port scan all hosts
-
-    GET /v1/service/:service/ping
-    Expected HTTP status code: 200
-
-#### check health status of all backends
-
-    GET /v1/service/:service/health
-    Expected HTTP status code: 200
-
-#### ban based on pattern
-
-    POST /v1/service/:service/ban
-    JSON Body: {"Pattern":"..."}
-    Expected HTTP status code: 200
-
-#### ban based on vcl
-
-    POST /v1/service/:service/ban
-    JSON Body: {"Vcl":"..."}
-    Expected HTTP status code: 200
-
-
+Visit http://127.0.0.1:4000/
 
 ### CURL Examples
 
@@ -154,17 +116,17 @@ curl -i http://127.0.0.1:4000/v1/service/group1/health
 #### Ban the root of your website.
 
 ``` sh
-curl -i http://127.0.0.1:4000/v1/service/group1/ban -d '{"Pattern":"/"}'
+curl -i http://127.0.0.1:4000/v1/service/group1/ban -d '{"Pattern":"/"}' -H 'Content-Type: application/json'
 ```
 
 #### Ban all css files
 
 ``` sh
-curl -i http://127.0.0.1:4000/v1/service/group1/ban -d '{"Pattern":".*css"}'
+curl -i http://127.0.0.1:4000/v1/service/group1/ban -d '{"Pattern":".*css"}' -H 'Content-Type: application/json'
 ```
 
 #### Ban based on VCL, in this case all objects matching a host-header.
 
 ``` sh
-curl -i http://127.0.0.1:4000/v1/service/group1/ban -d '{"Vcl":"req.http.Host == 'example.com'"}'
+curl -i http://127.0.0.1:4000/v1/service/group1/ban -d '{"Vcl":"req.http.Host == 'example.com'"}' -H 'Content-Type: application/json'
 ```
