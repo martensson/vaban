@@ -3,13 +3,14 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"log"
 	"net"
 	"regexp"
 	"strings"
 )
 
-func varnishAuth(server string, secret string, conn net.Conn) bool {
+func varnishAuth(server string, secret string, conn net.Conn) error {
 	// I want to allocate 512 bytes, enough to read the varnish help output.
 	reply := make([]byte, 512)
 	conn.Read(reply)
@@ -25,6 +26,8 @@ func varnishAuth(server string, secret string, conn net.Conn) bool {
 		auth_reply := make([]byte, 512)
 		conn.Read(auth_reply)
 		log.Println(server, "auth status", strings.Trim(string(auth_reply)[0:12], " "))
+		return nil
+	} else {
+		return errors.New(server + " could not find challenge code, secret-file disabled.")
 	}
-	return true
 }

@@ -52,7 +52,10 @@ func Health(server string, secret string) Backends {
 		log.Println(err)
 		return backends
 	}
-	varnishAuth(server, secret, conn)
+	err = varnishAuth(server, secret, conn)
+	if err != nil {
+		log.Println(err)
+	}
 	conn.Write([]byte("backend.list\n"))
 	byte_health := make([]byte, 512)
 	n, err := conn.Read(byte_health)
