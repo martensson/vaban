@@ -48,6 +48,7 @@ func GetHealth(req *restful.Request, resp *restful.Response) {
 func Health(server string, secret string) Backends {
 	backends := Backends{}
 	conn, err := net.Dial("tcp", server)
+	defer conn.Close()
 	if err != nil {
 		log.Println(err)
 		return backends

@@ -1,19 +1,34 @@
 package main
 
 import (
+	"log"
 	"net"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/emicklei/go-restful"
 )
 
-func Pinger(server string) string {
-	_, err := net.Dial("tcp", server)
+func Pinger(server string, secret string) string {
+	conn, err := net.Dial("tcp", server)
+	defer conn.Close()
 	if err != nil {
 		return err.Error()
 	}
-	return "tcp port open"
+	err = varnishAuth(server, secret, conn)
+	if err != nil {
+		log.Println(err)
+	}
+	conn.Write([]byte("ping\n"))
+	pong := make([]byte, 32)
+	_, err = conn.Read(pong)
+	if err != nil {
+		return err.Error()
+	}
+	status := string(pong)[13:32]
+	status = strings.Trim(status, " ")
+	return status
 }
 
 func GetPing(req *restful.Request, resp *restful.Response) {
@@ -30,7 +45,7 @@ func GetPing(req *restful.Request, resp *restful.Response) {
 				// Decrement the counter when the goroutine completes.
 				defer wg.Done()
 				message := Message{}
-				message.Msg = Pinger(server)
+				message.Msg = Pinger(server, s.Secret)
 				messages[server] = message
 			}(server)
 		}

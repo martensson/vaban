@@ -20,9 +20,17 @@ func NCSACommonLogFormatLogger() restful.FilterFunction {
 				username = name
 			}
 		}
+		forwarded := req.HeaderParameter("X-FORWARDED-FOR")
+		var clientip string
+		if forwarded != "" {
+			clientip = forwarded
+		} else {
+			clientip = strings.Split(req.Request.RemoteAddr, ":")[0]
+		}
+		log.Println(forwarded)
 		chain.ProcessFilter(req, resp)
 		logger.Printf("%s - %s [%s] \"%s %s %s\" %d %d",
-			strings.Split(req.Request.RemoteAddr, ":")[0],
+			clientip,
 			username,
 			time.Now().Format("02/Jan/2006:15:04:05 -0700"),
 			req.Request.Method,

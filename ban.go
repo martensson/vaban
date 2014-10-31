@@ -1,12 +1,9 @@
 package main
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"log"
 	"net"
 	"net/http"
-	"regexp"
 	"strings"
 	"sync"
 
@@ -62,25 +59,14 @@ func PostBan(req *restful.Request, resp *restful.Response) {
 
 func Banner(server string, banpost BanPost, secret string) string {
 	conn, err := net.Dial("tcp", server)
+	defer conn.Close()
 	if err != nil {
 		log.Println(err)
 		return err.Error()
 	}
-	// I want to allocate 512 bytes, enough to read the varnish help output.
-	reply := make([]byte, 512)
-	conn.Read(reply)
-	rp := regexp.MustCompile("[a-z]{32}") //find challenge string
-	challenge := rp.FindString(string(reply))
-	if challenge != "" {
-		// time to authenticate
-		hash := sha256.New()
-		hash.Write([]byte(challenge + "\n" + secret + "\n" + challenge + "\n"))
-		md := hash.Sum(nil)
-		mdStr := hex.EncodeToString(md)
-		conn.Write([]byte("auth " + mdStr + "\n"))
-		auth_reply := make([]byte, 512)
-		conn.Read(auth_reply)
-		log.Println(server, "auth status", strings.Trim(string(auth_reply)[0:12], " "))
+	err = varnishAuth(server, secret, conn)
+	if err != nil {
+		log.Println(err)
 	}
 	// sending the magic ban commmand to varnish.
 	if banpost.Pattern != "" {
@@ -95,7 +81,6 @@ func Banner(server string, banpost BanPost, secret string) string {
 		log.Printf("Could not read packet : %s", err.Error())
 		return err.Error()
 	}
-	conn.Close()
 	// cast byte to string and only keep the status code (always max 13 char), the rest we dont care.
 	status := string(byte_status)[0:12]
 	status = strings.Trim(status, " ")
