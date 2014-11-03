@@ -59,11 +59,11 @@ func PostBan(req *restful.Request, resp *restful.Response) {
 
 func Banner(server string, banpost BanPost, secret string) string {
 	conn, err := net.Dial("tcp", server)
-	defer conn.Close()
 	if err != nil {
 		log.Println(err)
 		return err.Error()
 	}
+	defer conn.Close()
 	err = varnishAuth(server, secret, conn)
 	if err != nil {
 		log.Println(err)

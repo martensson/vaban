@@ -12,10 +12,10 @@ import (
 
 func Pinger(server string, secret string) string {
 	conn, err := net.Dial("tcp", server)
-	defer conn.Close()
 	if err != nil {
 		return err.Error()
 	}
+	defer conn.Close()
 	err = varnishAuth(server, secret, conn)
 	if err != nil {
 		log.Println(err)

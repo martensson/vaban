@@ -90,11 +90,11 @@ func PostHealth(req *restful.Request, resp *restful.Response) {
 
 func UpdateHealth(server string, secret string, backend string, healthpost HealthPost) string {
 	conn, err := net.Dial("tcp", server)
-	defer conn.Close()
 	if err != nil {
 		log.Println(err)
 		return err.Error()
 	}
+	defer conn.Close()
 	err = varnishAuth(server, secret, conn)
 	if err != nil {
 		log.Println(err)
@@ -117,11 +117,11 @@ func UpdateHealth(server string, secret string, backend string, healthpost Healt
 func StatusHealth(server string, secret string, backend string) Backends {
 	backends := Backends{}
 	conn, err := net.Dial("tcp", server)
-	defer conn.Close()
 	if err != nil {
 		log.Println(err)
 		return backends
 	}
+	defer conn.Close()
 	err = varnishAuth(server, secret, conn)
 	if err != nil {
 		log.Println(err)
