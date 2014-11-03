@@ -28,6 +28,6 @@ func varnishAuth(server string, secret string, conn net.Conn) error {
 		log.Println(server, "auth status", strings.Trim(string(auth_reply)[0:12], " "))
 		return nil
 	} else {
-		return errors.New(server + " could not find challenge code, secret-file disabled.")
+		return errors.New(server + " no challenge code, secret-file disabled.")
 	}
 }

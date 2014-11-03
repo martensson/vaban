@@ -61,9 +61,23 @@ func main() {
 		Reads(Messages{}))
 	ws.Route(ws.GET("/service/{service}/health").To(GetHealth).
 		// docs
-		Doc("get health status of all backends per host in service").
+		Doc("get health status of all backends").
 		Operation("GetHealth").
 		Param(ws.PathParameter("service", "identifier of the service").DataType("string")).
+		Reads(Messages{}))
+	ws.Route(ws.GET("/service/{service}/health/{backend}").To(GetHealth).
+		// docs
+		Doc("get health status of specific backend").
+		Operation("GetHealth").
+		Param(ws.PathParameter("service", "identifier of the service").DataType("string")).
+		Param(ws.PathParameter("backend", "identifier of the backend").DataType("string")).
+		Reads(Messages{}))
+	ws.Route(ws.POST("/service/{service}/health/{backend}").To(PostHealth).
+		// docs
+		Doc("set health status on specific backend (auto/sick/healthy)").
+		Operation("PostHealth").
+		Param(ws.PathParameter("service", "identifier of the service").DataType("string")).
+		Param(ws.PathParameter("backend", "identifier of the backend").DataType("string")).
 		Reads(Messages{}))
 	ws.Route(ws.POST("/service/{service}/ban").To(PostBan).
 		// docs
