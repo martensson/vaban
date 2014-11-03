@@ -40,6 +40,8 @@ func main() {
 	ws := new(restful.WebService)
 	ws.Path("/v1")
 	ws.Filter(NCSACommonLogFormatLogger())
+	restful.DefaultResponseContentType(restful.MIME_JSON)
+	restful.DefaultRequestContentType(restful.MIME_JSON)
 	ws.Consumes(restful.MIME_JSON)
 	ws.Produces(restful.MIME_JSON)
 	ws.Route(ws.GET("/services").To(GetServices).
@@ -85,8 +87,6 @@ func main() {
 		Operation("PostBan").
 		Param(ws.PathParameter("service", "identifier of the service").DataType("string")).
 		Reads(Messages{}))
-	restful.DefaultResponseContentType(restful.MIME_JSON)
-	restful.DefaultRequestContentType(restful.MIME_JSON)
 	restful.Add(ws)
 
 	sc := swagger.Config{
