@@ -2,6 +2,4 @@ targets:
   ubuntu-12.04:
   ubuntu-14.04:
   debian-7:
-before:
-  - touch /var/log/vaban_access_log
-  - chown vaban:vaban /var/log/vaban_access_log
+after_install: "packaging/postinstall.sh"
