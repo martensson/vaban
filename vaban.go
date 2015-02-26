@@ -42,51 +42,55 @@ func main() {
 	ws.Filter(NCSACommonLogFormatLogger())
 	restful.DefaultResponseContentType(restful.MIME_JSON)
 	restful.DefaultRequestContentType(restful.MIME_JSON)
+	restful.PrettyPrintResponses = true
 	ws.Consumes(restful.MIME_JSON)
 	ws.Produces(restful.MIME_JSON)
 	ws.Route(ws.GET("/services").To(GetServices).
 		// docs
 		Doc("get all services").
-		Operation("GetServices").
-		Reads(Services{}))
+		Returns(200, "msg received.", nil).
+		Operation("GetServices"))
 	ws.Route(ws.GET("/service/{service}").To(GetService).
 		// docs
-		Doc("get a service").
+		Doc("get all hosts in service").
 		Operation("GetService").
-		Param(ws.PathParameter("service", "identifier of the service").DataType("string")).
-		Reads(Service{}))
+		Returns(200, "msg received.", nil).
+		Param(ws.PathParameter("service", "identifier of the service").DataType("string")))
 	ws.Route(ws.GET("/service/{service}/ping").To(GetPing).
 		// docs
 		Doc("ping all hosts in service").
 		Operation("GetPing").
-		Param(ws.PathParameter("service", "identifier of the service").DataType("string")).
-		Reads(Messages{}))
+		Returns(200, "msg received.", Messages{}).
+		Param(ws.PathParameter("service", "identifier of the service").DataType("string")))
 	ws.Route(ws.GET("/service/{service}/health").To(GetHealth).
 		// docs
 		Doc("get health status of all backends").
 		Operation("GetHealth").
-		Param(ws.PathParameter("service", "identifier of the service").DataType("string")).
-		Reads(Messages{}))
+		Returns(200, "msg received.", Servers{}).
+		Param(ws.PathParameter("service", "identifier of the service").DataType("string")))
 	ws.Route(ws.GET("/service/{service}/health/{backend}").To(GetHealth).
 		// docs
 		Doc("get health status of specific backend").
 		Operation("GetHealth").
+		Returns(200, "msg received.", Servers{}).
 		Param(ws.PathParameter("service", "identifier of the service").DataType("string")).
-		Param(ws.PathParameter("backend", "identifier of the backend").DataType("string")).
-		Reads(Messages{}))
+		Param(ws.PathParameter("backend", "identifier of the backend").DataType("string")))
 	ws.Route(ws.POST("/service/{service}/health/{backend}").To(PostHealth).
 		// docs
 		Doc("set health status on specific backend (auto/sick/healthy)").
 		Operation("PostHealth").
 		Param(ws.PathParameter("service", "identifier of the service").DataType("string")).
 		Param(ws.PathParameter("backend", "identifier of the backend").DataType("string")).
-		Reads(Messages{}))
+		Notes("Valid health status is 'auto', 'sick' or 'healthy'. Default is 'auto'.").
+		Returns(200, "msg received.", Messages{}).
+		Reads(HealthPost{}))
 	ws.Route(ws.POST("/service/{service}/ban").To(PostBan).
 		// docs
 		Doc("ban elements from all hosts in service").
 		Operation("PostBan").
 		Param(ws.PathParameter("service", "identifier of the service").DataType("string")).
-		Reads(Messages{}))
+		Returns(200, "msg received.", Messages{}).
+		Reads(BanPost{}))
 	restful.Add(ws)
 
 	sc := swagger.Config{

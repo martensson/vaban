@@ -27,7 +27,6 @@ func NCSACommonLogFormatLogger() restful.FilterFunction {
 		} else {
 			clientip = strings.Split(req.Request.RemoteAddr, ":")[0]
 		}
-		log.Println(forwarded)
 		chain.ProcessFilter(req, resp)
 		logger.Printf("%s - %s [%s] \"%s %s %s\" %d %d",
 			clientip,
