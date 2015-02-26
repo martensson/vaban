@@ -21,7 +21,7 @@ The easiest way to install Vaban is from packages.
 #### Dependencies
 
 * Git
-* Go 1.3+
+* Go 1.4+
 
 #### Clone and Build locally:
 
