@@ -4,10 +4,8 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
-	"log"
 	"net"
 	"regexp"
-	"strings"
 )
 
 func varnishAuth(server string, secret string, conn net.Conn) error {
@@ -25,7 +23,7 @@ func varnishAuth(server string, secret string, conn net.Conn) error {
 		conn.Write([]byte("auth " + mdStr + "\n"))
 		auth_reply := make([]byte, 512)
 		conn.Read(auth_reply)
-		log.Println(server, "auth status", strings.Trim(string(auth_reply)[0:12], " "))
+		//log.Println(server, "auth status", strings.Trim(string(auth_reply)[0:12], " "))
 		return nil
 	} else {
 		return errors.New(server + " no challenge code, secret-file disabled.")

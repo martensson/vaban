@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net"
 	"net/http"
@@ -8,7 +9,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/emicklei/go-restful"
+	"github.com/Sirupsen/logrus"
+	"github.com/julienschmidt/httprouter"
 )
 
 type HealthStatus struct {
@@ -23,11 +25,9 @@ type HealthPost struct {
 	Set_health string
 }
 
-func GetHealth(req *restful.Request, resp *restful.Response) {
-	service := req.PathParameter("service")
-	backend := req.PathParameter("backend")
-	healthpost := HealthPost{}
-	req.ReadEntity(&healthpost)
+func GetHealth(w http.ResponseWriter, req *http.Request, ps httprouter.Params) {
+	service := ps.ByName("service")
+	backend := ps.ByName("backend")
 	if s, ok := services[service]; ok {
 		// We need the WaitGroup for some awesome Go concurrency
 		var wg sync.WaitGroup
@@ -44,25 +44,27 @@ func GetHealth(req *restful.Request, resp *restful.Response) {
 			}(server)
 		}
 		wg.Wait()
-		resp.WriteEntity(servers)
+		r.JSON(w, http.StatusOK, servers)
 	} else {
-		resp.WriteErrorString(http.StatusNotFound, "Service could not be found.")
+		w.Write([]byte("Service could not be found."))
 		return
 	}
 }
 
-func PostHealth(req *restful.Request, resp *restful.Response) {
-	service := req.PathParameter("service")
-	backend := req.PathParameter("backend")
+func PostHealth(w http.ResponseWriter, req *http.Request, ps httprouter.Params) {
+	service := ps.ByName("service")
+	backend := ps.ByName("backend")
 	healthpost := HealthPost{}
-	err := req.ReadEntity(&healthpost)
+	decoder := json.NewDecoder(req.Body)
+	err := decoder.Decode(&healthpost)
 	if err != nil {
-		resp.AddHeader("Content-Type", "text/plain")
-		resp.WriteErrorString(http.StatusInternalServerError, err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
 		return
 	}
 	if healthpost.Set_health == "" {
-		resp.WriteErrorString(http.StatusBadRequest, "Set_health is required")
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Set_health is required"))
 		return
 	}
 	if s, ok := services[service]; ok {
@@ -81,9 +83,10 @@ func PostHealth(req *restful.Request, resp *restful.Response) {
 			}(server)
 		}
 		wg.Wait()
-		resp.WriteEntity(messages)
+		r.JSON(w, http.StatusOK, messages)
 	} else {
-		resp.WriteErrorString(http.StatusNotFound, "Service could not be found.")
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("Service could not be found."))
 		return
 	}
 }
@@ -110,7 +113,12 @@ func UpdateHealth(server string, secret string, backend string, healthpost Healt
 	// cast byte to string and only keep the status code (always max 13 char), the rest we dont care.
 	status := string(byte_status)[0:12]
 	status = strings.Trim(status, " ")
-	log.Println(server, "set_health", backend, healthpost.Set_health, "status", status)
+	logrus.WithFields(logrus.Fields{
+		"set_health": healthpost.Set_health,
+		"backend":    backend,
+		"server":     server,
+		"status":     status,
+	}).Info("health")
 	return "updated with status " + status
 }
 

@@ -7,8 +7,10 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/emicklei/go-restful"
-	"github.com/emicklei/go-restful/swagger"
+	"github.com/codegangsta/negroni"
+	"github.com/julienschmidt/httprouter"
+	"github.com/thoas/stats"
+	"github.com/unrolled/render"
 	"gopkg.in/yaml.v1"
 )
 
@@ -25,6 +27,34 @@ type Services map[string]Service
 
 var services Services
 
+var r = render.New(render.Options{
+	IndentJSON: true,
+})
+
+func initialize() *negroni.Negroni {
+	vabanstats := stats.New()
+	n := negroni.New(
+		negroni.NewRecovery(),
+		NewMiddleware(),
+		vabanstats,
+	)
+	router := httprouter.New()
+	router.GET("/", func(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+		stats := vabanstats.Data()
+		r.JSON(w, http.StatusOK, stats)
+	})
+	router.GET("/v1/services", GetServices)
+	router.GET("/v1/service/:service", GetService)
+	router.GET("/v1/service/:service/ping", GetPing)
+	router.GET("/v1/service/:service/health", GetHealth)
+	router.GET("/v1/service/:service/health/:backend", GetHealth)
+	router.POST("/v1/service/:service/health/:backend", PostHealth)
+	router.POST("/v1/service/:service/ban", PostBan)
+	// add router and clear mux.context values at the end of request life-times
+	n.UseHandler(router)
+	return n
+}
+
 func main() {
 	port := flag.String("p", "4000", "Listen on this port. (default 4000)")
 	config := flag.String("f", "config.yml", "Path to config. (default config.yml)")
@@ -37,70 +67,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Problem parsing config: ", err)
 	}
-	ws := new(restful.WebService)
-	ws.Path("/v1")
-	ws.Filter(NCSACommonLogFormatLogger())
-	restful.DefaultResponseContentType(restful.MIME_JSON)
-	restful.DefaultRequestContentType(restful.MIME_JSON)
-	restful.PrettyPrintResponses = true
-	ws.Consumes(restful.MIME_JSON)
-	ws.Produces(restful.MIME_JSON)
-	ws.Route(ws.GET("/services").To(GetServices).
-		// docs
-		Doc("get all services").
-		Returns(200, "msg received.", nil).
-		Operation("GetServices"))
-	ws.Route(ws.GET("/service/{service}").To(GetService).
-		// docs
-		Doc("get all hosts in service").
-		Operation("GetService").
-		Returns(200, "msg received.", nil).
-		Param(ws.PathParameter("service", "identifier of the service").DataType("string")))
-	ws.Route(ws.GET("/service/{service}/ping").To(GetPing).
-		// docs
-		Doc("ping all hosts in service").
-		Operation("GetPing").
-		Returns(200, "msg received.", Messages{}).
-		Param(ws.PathParameter("service", "identifier of the service").DataType("string")))
-	ws.Route(ws.GET("/service/{service}/health").To(GetHealth).
-		// docs
-		Doc("get health status of all backends").
-		Operation("GetHealth").
-		Returns(200, "msg received.", Servers{}).
-		Param(ws.PathParameter("service", "identifier of the service").DataType("string")))
-	ws.Route(ws.GET("/service/{service}/health/{backend}").To(GetHealth).
-		// docs
-		Doc("get health status of specific backend").
-		Operation("GetHealth").
-		Returns(200, "msg received.", Servers{}).
-		Param(ws.PathParameter("service", "identifier of the service").DataType("string")).
-		Param(ws.PathParameter("backend", "identifier of the backend").DataType("string")))
-	ws.Route(ws.POST("/service/{service}/health/{backend}").To(PostHealth).
-		// docs
-		Doc("set health status on specific backend (auto/sick/healthy)").
-		Operation("PostHealth").
-		Param(ws.PathParameter("service", "identifier of the service").DataType("string")).
-		Param(ws.PathParameter("backend", "identifier of the backend").DataType("string")).
-		Notes("Valid health status is 'auto', 'sick' or 'healthy'. Default is 'auto'.").
-		Returns(200, "msg received.", Messages{}).
-		Reads(HealthPost{}))
-	ws.Route(ws.POST("/service/{service}/ban").To(PostBan).
-		// docs
-		Doc("ban elements from all hosts in service").
-		Operation("PostBan").
-		Param(ws.PathParameter("service", "identifier of the service").DataType("string")).
-		Returns(200, "msg received.", Messages{}).
-		Reads(BanPost{}))
-	restful.Add(ws)
-
-	sc := swagger.Config{
-		WebServices: restful.RegisteredWebServices(), // you control what services are visible
-		ApiPath:     "/api.json",
-		// Optionally, specifiy where the UI is located
-		SwaggerPath:     "/",
-		SwaggerFilePath: "swagger"}
-	swagger.InstallSwaggerService(sc)
-
-	log.Println("Starting Vaban on :" + *port)
-	http.ListenAndServe(":4000", nil)
+	n := initialize()
+	log.Println("Starting vaban on :" + *port)
+	n.Run(":" + *port)
 }

@@ -3,24 +3,26 @@ package main
 import (
 	"net/http"
 
-	"github.com/emicklei/go-restful"
+	"github.com/julienschmidt/httprouter"
 )
 
-func GetService(req *restful.Request, resp *restful.Response) {
-	service := req.PathParameter("service")
+func GetService(w http.ResponseWriter, req *http.Request, ps httprouter.Params) {
+	service := ps.ByName("service")
 
 	if s, ok := services[service]; ok {
-		resp.WriteEntity(s.Hosts)
+		r.JSON(w, http.StatusOK, s.Hosts)
+		return
 	} else {
-		resp.WriteErrorString(http.StatusNotFound, "Service could not be found.")
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("Service could not be found."))
 		return
 	}
 }
 
-func GetServices(req *restful.Request, resp *restful.Response) {
+func GetServices(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 	var keys []string
 	for k, _ := range services {
 		keys = append(keys, k)
 	}
-	resp.WriteEntity(keys)
+	r.JSON(w, http.StatusOK, keys)
 }

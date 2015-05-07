@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/emicklei/go-restful"
+	"github.com/julienschmidt/httprouter"
 )
 
 func Pinger(server string, secret string) string {
@@ -31,8 +31,8 @@ func Pinger(server string, secret string) string {
 	return status
 }
 
-func GetPing(req *restful.Request, resp *restful.Response) {
-	service := req.PathParameter("service")
+func GetPing(w http.ResponseWriter, req *http.Request, ps httprouter.Params) {
+	service := ps.ByName("service")
 
 	if s, ok := services[service]; ok {
 		// We need the WaitGroup for some awesome Go concurrency of our BANs
@@ -51,9 +51,10 @@ func GetPing(req *restful.Request, resp *restful.Response) {
 		}
 		// Wait for all PINGs to complete.
 		wg.Wait()
-		resp.WriteEntity(messages)
+		r.JSON(w, http.StatusOK, messages)
 	} else {
-		resp.WriteErrorString(http.StatusNotFound, "Service could not be found.")
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("Service could not be found."))
 		return
 	}
 }

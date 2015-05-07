@@ -1,42 +1,42 @@
 package main
 
 import (
-	"log"
-	"os"
-	"strings"
+	"fmt"
+	"net/http"
 	"time"
 
-	"github.com/emicklei/go-restful"
+	"github.com/Sirupsen/logrus"
+	"github.com/codegangsta/negroni"
 )
 
-var accessfile, err = os.OpenFile("/var/log/vaban_access_log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-var logger *log.Logger = log.New(accessfile, "", 0)
+// Middleware is a middleware handler that logs the request as it goes in and the response as it goes out.
+type Middleware struct {
+	// Logger is the log.Logger instance used to log messages with the Logger middleware
+	Logger *logrus.Logger
+	// Name is the name of the application as recorded in latency metrics
+	Name string
+}
 
-func NCSACommonLogFormatLogger() restful.FilterFunction {
-	return func(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
-		var username = "-"
-		if req.Request.URL.User != nil {
-			if name := req.Request.URL.User.Username(); name != "" {
-				username = name
-			}
-		}
-		forwarded := req.HeaderParameter("X-FORWARDED-FOR")
-		var clientip string
-		if forwarded != "" {
-			clientip = forwarded
-		} else {
-			clientip = strings.Split(req.Request.RemoteAddr, ":")[0]
-		}
-		chain.ProcessFilter(req, resp)
-		logger.Printf("%s - %s [%s] \"%s %s %s\" %d %d",
-			clientip,
-			username,
-			time.Now().Format("02/Jan/2006:15:04:05 -0700"),
-			req.Request.Method,
-			req.Request.URL.RequestURI(),
-			req.Request.Proto,
-			resp.StatusCode(),
-			resp.ContentLength(),
-		)
-	}
+func NewMiddleware() *Middleware {
+	log := logrus.New()
+	log.Level = logrus.InfoLevel
+	log.Formatter = &logrus.TextFormatter{}
+	name := "vaban"
+	return &Middleware{Logger: log, Name: name}
+}
+
+func (l *Middleware) ServeHTTP(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	start := time.Now()
+	next(rw, r)
+	latency := time.Since(start)
+	res := rw.(negroni.ResponseWriter)
+	entry := l.Logger.WithFields(logrus.Fields{
+		"request": r.RequestURI,
+		"method":  r.Method,
+		"remote":  r.RemoteAddr,
+		"status":  res.Status(),
+		"took":    latency,
+		fmt.Sprintf("measure#%s.latency", l.Name): latency.Nanoseconds(),
+	})
+	entry.Info("request")
 }

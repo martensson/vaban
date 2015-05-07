@@ -1,13 +1,15 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net"
 	"net/http"
 	"strings"
 	"sync"
 
-	"github.com/emicklei/go-restful"
+	"github.com/Sirupsen/logrus"
+	"github.com/julienschmidt/httprouter"
 )
 
 type BanPost struct {
@@ -15,24 +17,25 @@ type BanPost struct {
 	Vcl     string
 }
 
-func PostBan(req *restful.Request, resp *restful.Response) {
-	service := req.PathParameter("service")
+func PostBan(w http.ResponseWriter, req *http.Request, ps httprouter.Params) {
+	service := ps.ByName("service")
 	banpost := BanPost{}
-
-	err := req.ReadEntity(&banpost)
+	decoder := json.NewDecoder(req.Body)
+	err := decoder.Decode(&banpost)
 	if err != nil {
-		resp.AddHeader("Content-Type", "text/plain")
-		resp.WriteErrorString(http.StatusInternalServerError, err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
 		return
 	}
 	if banpost.Pattern == "" && banpost.Vcl == "" {
-		resp.WriteErrorString(http.StatusBadRequest, "Pattern or VCL is required")
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Pattern or VCL is required"))
 		return
 	} else if banpost.Pattern != "" && banpost.Vcl != "" {
-		resp.WriteErrorString(http.StatusBadRequest, "Pattern or VCL is required, not both.")
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Pattern or VCL is required, not both"))
 		return
 	}
-
 	if s, ok := services[service]; ok {
 		// We need the WaitGroup for some awesome Go concurrency of our BANs
 		var wg sync.WaitGroup
@@ -50,9 +53,11 @@ func PostBan(req *restful.Request, resp *restful.Response) {
 		}
 		// Wait for all BANs to complete.
 		wg.Wait()
-		resp.WriteEntity(messages)
+		r.JSON(w, http.StatusOK, messages)
+		return
 	} else {
-		resp.WriteErrorString(http.StatusNotFound, "Service could not be found.")
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("Service could not be found."))
 		return
 	}
 }
@@ -84,6 +89,11 @@ func Banner(server string, banpost BanPost, secret string) string {
 	// cast byte to string and only keep the status code (always max 13 char), the rest we dont care.
 	status := string(byte_status)[0:12]
 	status = strings.Trim(status, " ")
-	log.Println(server, "banned with status", status)
+	logrus.WithFields(logrus.Fields{
+		"vcl":     banpost.Vcl,
+		"pattern": banpost.Pattern,
+		"server":  server,
+		"status":  status,
+	}).Info("ban")
 	return "ban status " + status
 }
