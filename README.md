@@ -81,11 +81,11 @@ If you already have Docker install its really use to compile and run with two co
 
 **Make sure that the varnish admin interface is available on your hosts, listening on 0.0.0.0:6082**
 
-# API
+### API
 
 A quick and easy way to control clusters of Varnish Cache hosts using a RESTful JSON API.
 
-## GET /v1/services
+#### GET /v1/services
 
 Get all groups:
 
@@ -98,7 +98,7 @@ Get all groups:
         ]
         
 
-## GET /v1/service/group1
+#### GET /v1/service/group1
 
 Get all hosts in group:
 
@@ -108,7 +108,7 @@ Get all hosts in group:
             "test01:6082"
         ]
 
-## GET /v1/service/group1/ping
+#### GET /v1/service/group1/ping
 
 Scan hosts to see if tcp port is open:
 
@@ -120,7 +120,7 @@ Scan hosts to see if tcp port is open:
             }
         }
 
-## GET /v1/service/group1/health
+#### GET /v1/service/group1/health
 
 Check health status of all backends:
 
@@ -138,7 +138,7 @@ Check health status of all backends:
 
 
 
-## GET /v1/service/group1/health/www01
+#### GET /v1/service/group1/health/www01
 
 Check health status of one backend:
 
@@ -154,7 +154,7 @@ Check health status of one backend:
             }
         }
 
-## POST /v1/service/group1/health/www01
+#### POST /v1/service/group1/health/www01
 
 force health status of one backend (can be healthy, sick or auto):
 
@@ -170,7 +170,7 @@ force health status of one backend (can be healthy, sick or auto):
             }
         }
 
-## POST /v1/service/group1/ban
+#### POST /v1/service/group1/ban
 
 To ban elements in your cache.
 
