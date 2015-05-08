@@ -71,66 +71,126 @@ service vaban start
 vaban logs
 ```
 
+#### From Docker
+
+If you already have Docker install its really use to compile and run with two commands:
+
+    docker build -t vaban .
+    docker run -p 4000:4000 vaban
+
 
 **Make sure that the varnish admin interface is available on your hosts, listening on 0.0.0.0:6082**
 
+# API
 
-### SWAGGER REST API Reference
+A quick and easy way to control clusters of Varnish Cache hosts using a RESTful JSON API.
 
-Visit http://127.0.0.1:4000/
+## GET /v1/services
 
-### CURL Examples
+Get all groups:
 
-#### Get all groups
++ Response 200 (application/json)
 
-``` sh
-curl -i http://127.0.0.1:4000/v1/services
-```
+        [
+            "group1",
+            "group2",
+            "group3",
+        ]
+        
 
-#### Get all hosts in group
+## GET /v1/service/group1
 
-``` sh
-curl -i http://127.0.0.1:4000/v1/service/group1
-```
+Get all hosts in group:
 
-#### Scan hosts to see if tcp port is open
++ Response 200 (application/json)
 
-``` sh
-curl -i http://127.0.0.1:4000/v1/service/group1/ping
-```
+        [
+            "test01:6082"
+        ]
 
-#### Check health status of all backends
+## GET /v1/service/group1/ping
 
-``` sh
-curl -i http://127.0.0.1:4000/v1/service/group1/health
-```
+Scan hosts to see if tcp port is open:
 
-#### Check health status of one backend
++ Response 200 (application/json)
 
-``` sh
-curl -i http://127.0.0.1:4000/v1/service/group1/health/www01
-```
+        {
+            "test01:6082": {
+                "Msg": "PONG 1431078011 1.0"
+            }
+        }
 
-#### force health status of one backend (can be healthy, sick or auto)
+## GET /v1/service/group1/health
 
-``` sh
-curl -i http://127.0.0.1:4000/v1/service/group1/health/www01 -d '{"Set_health":"sick"}' -H 'Content-Type: application/json'
-```
+Check health status of all backends:
 
-#### Ban the root of your website.
++ Response 200 (application/json)
 
-``` sh
-curl -i http://127.0.0.1:4000/v1/service/group1/ban -d '{"Pattern":"/"}' -H 'Content-Type: application/json'
-```
+        {
+            "test01:6082": {
+                "backend01(10.160.101.100,,80)": {
+                    "Refs": "1",
+                    "Admin": "probe",
+                    "Probe": "Healthy 4/4"
+                }
+            }
+        }
 
-#### Ban all css files
 
-``` sh
-curl -i http://127.0.0.1:4000/v1/service/group1/ban -d '{"Pattern":".*css"}' -H 'Content-Type: application/json'
-```
 
-#### Ban based on VCL, in this case all objects matching a host-header.
+## GET /v1/service/group1/health/www01
 
-``` sh
-curl -i http://127.0.0.1:4000/v1/service/group1/ban -d '{"Vcl":"req.http.Host == 'example.com'"}' -H 'Content-Type: application/json'
-```
+Check health status of one backend:
+
++ Response 200 (application/json)
+
+        {
+            "test01:6082": {
+                "backend01(10.160.101.100,,80)": {
+                    "Refs": "1",
+                    "Admin": "probe",
+                    "Probe": "Healthy 3/4"
+                }
+            }
+        }
+
+## POST /v1/service/group1/health/www01
+
+force health status of one backend (can be healthy, sick or auto):
+
++ Request (application/json)
+
+        {"Set_health":"sick"}
+
++ Response 200 (application/json)
+
+        {
+            "test01:6082": {
+                "Msg": "updated with status 200 0"
+            }
+        }
+
+## POST /v1/service/group1/ban
+
+To ban elements in your cache.
+
++ Request Ban the root of your website (application/json)
+
+        {"Pattern":"/"}
+        
++ Request Ban all css files (application/json)
+
+        {"Pattern":".*css"}
+        
++ Request Ban based on VCL, in this case all objects matching a host-header. (application/json)
+
+        {"Vcl":"req.http.Host == 'example.com'"}"}
+
++ Response 200 (application/json)
+
+        {
+            "test01:6082": {
+                "Msg": "ban status 200 0"
+            }
+        }
+
