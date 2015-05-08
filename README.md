@@ -56,11 +56,11 @@ service2:
 
 ### Running Vaban
 
-If compiling from source:
+#### from source:
 ``` sh
 ./vaban -p 4000 -f /path/to/config.yml
 ```
-If you installed from packages:
+#### from packages:
 ``` sh
 vaban run web
 ```
@@ -71,7 +71,7 @@ service vaban start
 vaban logs
 ```
 
-#### From Docker
+#### from Docker
 
 If you already have Docker install its really use to compile and run with two commands:
 
