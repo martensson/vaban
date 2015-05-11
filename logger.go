@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -30,10 +31,17 @@ func (l *Middleware) ServeHTTP(rw http.ResponseWriter, r *http.Request, next htt
 	next(rw, r)
 	latency := time.Since(start)
 	res := rw.(negroni.ResponseWriter)
+	forwarded := r.Header.Get("X-FORWARDED-FOR")
+	var clientip string
+	if forwarded != "" {
+		clientip = forwarded
+	} else {
+		clientip = strings.Split(r.RemoteAddr, ":")[0]
+	}
 	entry := l.Logger.WithFields(logrus.Fields{
 		"request": r.RequestURI,
 		"method":  r.Method,
-		"remote":  r.RemoteAddr,
+		"remote":  clientip,
 		"status":  res.Status(),
 		"took":    latency,
 		fmt.Sprintf("measure#%s.latency", l.Name): latency.Nanoseconds(),
