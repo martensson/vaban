@@ -9,6 +9,7 @@ import (
 
 	"github.com/codegangsta/negroni"
 	"github.com/julienschmidt/httprouter"
+	"github.com/pilu/xrequestid"
 	"github.com/thoas/stats"
 	"github.com/unrolled/render"
 	"gopkg.in/yaml.v1"
@@ -35,8 +36,8 @@ func initialize() *negroni.Negroni {
 	vabanstats := stats.New()
 	n := negroni.New(
 		negroni.NewRecovery(),
-		NewMiddleware(),
-		vabanstats,
+		NewLogger(),
+		xrequestid.New(8),
 	)
 	router := httprouter.New()
 	router.GET("/", func(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {

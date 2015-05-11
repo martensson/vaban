@@ -47,7 +47,7 @@ func PostBan(w http.ResponseWriter, req *http.Request, ps httprouter.Params) {
 				// Decrement the counter when the goroutine completes.
 				defer wg.Done()
 				message := Message{}
-				message.Msg = Banner(server, banpost, s.Secret)
+				message.Msg = Banner(server, banpost, s.Secret, req)
 				messages[server] = message
 			}(server)
 		}
@@ -62,17 +62,14 @@ func PostBan(w http.ResponseWriter, req *http.Request, ps httprouter.Params) {
 	}
 }
 
-func Banner(server string, banpost BanPost, secret string) string {
+func Banner(server string, banpost BanPost, secret string, req *http.Request) string {
 	conn, err := net.Dial("tcp", server)
 	if err != nil {
 		log.Println(err)
 		return err.Error()
 	}
 	defer conn.Close()
-	err = varnishAuth(server, secret, conn)
-	if err != nil {
-		log.Println(err)
-	}
+	varnishAuth(server, secret, conn)
 	// sending the magic ban commmand to varnish.
 	if banpost.Pattern != "" {
 		conn.Write([]byte("ban req.url ~ " + banpost.Pattern + "$\n"))
@@ -89,11 +86,15 @@ func Banner(server string, banpost BanPost, secret string) string {
 	// cast byte to string and only keep the status code (always max 13 char), the rest we dont care.
 	status := string(byte_status)[0:12]
 	status = strings.Trim(status, " ")
-	logrus.WithFields(logrus.Fields{
+	entry := logrus.WithFields(logrus.Fields{
 		"vcl":     banpost.Vcl,
 		"pattern": banpost.Pattern,
 		"server":  server,
 		"status":  status,
-	}).Info("ban")
+	})
+	if reqID := req.Header.Get("X-Request-Id"); reqID != "" {
+		entry = entry.WithField("request_id", reqID)
+	}
+	entry.Info("ban")
 	return "ban status " + status
 }

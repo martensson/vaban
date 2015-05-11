@@ -78,7 +78,7 @@ func PostHealth(w http.ResponseWriter, req *http.Request, ps httprouter.Params) 
 				// Decrement the counter when the goroutine completes.
 				defer wg.Done()
 				message := Message{}
-				message.Msg = UpdateHealth(server, s.Secret, backend, healthpost)
+				message.Msg = UpdateHealth(server, s.Secret, backend, healthpost, req)
 				messages[server] = message
 			}(server)
 		}
@@ -91,7 +91,7 @@ func PostHealth(w http.ResponseWriter, req *http.Request, ps httprouter.Params) 
 	}
 }
 
-func UpdateHealth(server string, secret string, backend string, healthpost HealthPost) string {
+func UpdateHealth(server string, secret string, backend string, healthpost HealthPost, req *http.Request) string {
 	conn, err := net.Dial("tcp", server)
 	if err != nil {
 		log.Println(err)
@@ -113,12 +113,16 @@ func UpdateHealth(server string, secret string, backend string, healthpost Healt
 	// cast byte to string and only keep the status code (always max 13 char), the rest we dont care.
 	status := string(byte_status)[0:12]
 	status = strings.Trim(status, " ")
-	logrus.WithFields(logrus.Fields{
+	entry := logrus.WithFields(logrus.Fields{
 		"set_health": healthpost.Set_health,
 		"backend":    backend,
 		"server":     server,
 		"status":     status,
-	}).Info("health")
+	})
+	if reqID := req.Header.Get("X-Request-Id"); reqID != "" {
+		entry = entry.WithField("request_id", reqID)
+	}
+	entry.Info("health")
 	return "updated with status " + status
 }
 

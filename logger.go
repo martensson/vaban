@@ -17,7 +17,7 @@ type Middleware struct {
 	Name string
 }
 
-func NewMiddleware() *Middleware {
+func NewLogger() *Middleware {
 	log := logrus.New()
 	log.Level = logrus.InfoLevel
 	log.Formatter = &logrus.TextFormatter{}
@@ -38,5 +38,8 @@ func (l *Middleware) ServeHTTP(rw http.ResponseWriter, r *http.Request, next htt
 		"took":    latency,
 		fmt.Sprintf("measure#%s.latency", l.Name): latency.Nanoseconds(),
 	})
+	if reqID := r.Header.Get("X-Request-Id"); reqID != "" {
+		entry = entry.WithField("request_id", reqID)
+	}
 	entry.Info("request")
 }
