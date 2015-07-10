@@ -143,7 +143,6 @@ func StatusHealth(server string, secret string, backend string) Backends {
 	} else {
 		conn.Write([]byte("backend.list " + backend + "\n"))
 	}
-	conn.Write([]byte("backend.list\n"))
 	byte_health := make([]byte, 512)
 	n, err := conn.Read(byte_health)
 	if err != nil {
